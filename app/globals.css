@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: theme("colors.bg");
+    color: theme("colors.text");
+    font-family: "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-card p-5 shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg border border-transparent text-sm font-semibold cursor-pointer transition;
+  }
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark disabled:bg-slate-400 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white text-text border-border hover:bg-slate-50;
+  }
+  .btn-large {
+    @apply px-8 py-3 text-[15px];
+  }
+  .panel {
+    @apply bg-surface border border-border rounded-card p-4 shadow-card mb-4;
+  }
+  .status-tag {
+    @apply inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider;
+  }
+  .status-tag-run {
+    @apply bg-green-100 text-green-700;
+  }
+  .status-tag-down {
+    @apply bg-amber-100 text-amber-700;
+  }
+  .status-tag-stop {
+    @apply bg-red-100 text-red-700;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    font-size: 11px;
+  }
+  .no-print {
+    display: none !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
