@@ -76,6 +76,53 @@ export function HelpBox() {
           {SAMPLE_JSON}
         </pre>
       </details>
+
+      <details className="bg-amber-50 border border-amber-200 rounded-card p-3">
+        <summary className="font-semibold cursor-pointer">
+          MOLD 생산 실적 파일(Excel/CSV) 포맷
+        </summary>
+        <div className="mt-2 text-[13px] space-y-2">
+          <p>
+            Excel(.xlsx/.xls) 또는 CSV 파일을 올리면 각 시트/행을 읽어 설비별
+            생산 수량을 집계합니다. <strong>헤더 행은 1~4번째 행 중 어디에
+            있어도 자동 인식</strong>되며, 공백·대소문자·단위 괄호는 무시합니다
+            (예: "생산수량 (ea)" → OK).
+          </p>
+          <p className="font-semibold mt-2 mb-1">필수 컬럼</p>
+          <ul className="m-0 pl-5 list-disc">
+            <li>
+              <strong>설비ID</strong> — 다음 중 하나:{" "}
+              <code>설비ID</code>, <code>설비명</code>, <code>설비번호</code>,{" "}
+              <code>호기</code>, <code>라인</code>, <code>machine</code>,{" "}
+              <code>machineid</code>, <code>equipment</code>
+            </li>
+            <li>
+              <strong>수량</strong> — 다음 중 하나: <code>수량</code>,{" "}
+              <code>생산량</code>, <code>생산수량</code>, <code>개수</code>,{" "}
+              <code>qty</code>, <code>quantity</code>, <code>count</code>
+            </li>
+          </ul>
+          <p className="font-semibold mt-2 mb-1">선택 컬럼</p>
+          <ul className="m-0 pl-5 list-disc">
+            <li>
+              날짜: <code>일자</code>, <code>날짜</code>, <code>일시</code>,{" "}
+              <code>date</code>, <code>생산일자</code>
+            </li>
+            <li>
+              시작/종료 시각: <code>시작시각</code>, <code>종료시각</code>,{" "}
+              <code>start</code>, <code>end</code>
+            </li>
+            <li>
+              부서/공정: <code>부서</code>, <code>공정</code>,{" "}
+              <code>파트</code>, <code>department</code> (없으면 시트명 사용)
+            </li>
+          </ul>
+          <p className="mt-2 text-muted">
+            설비ID 값은 EMS JSON의 <code>equipments[].id</code>와 일치해야 해당
+            설비에 생산 수량이 매칭됩니다.
+          </p>
+        </div>
+      </details>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import type {
   Threshold,
   ThresholdMap,
 } from "@/types/fems";
-import { loadEms, loadMold } from "@/lib/parse";
+import { loadEms, loadMoldDetailed } from "@/lib/parse";
 import { autoThresholds } from "@/lib/thresholds";
 import { analyze } from "@/lib/aggregate";
 import { toSerializable, fromSerializable } from "@/lib/storage/types";
@@ -107,7 +107,19 @@ export const useFems = create<FemsState>((set, get) => ({
     set({ isAnalyzing: true });
     try {
       const emsRaw = await loadEms(emsFile);
-      const moldRows = moldFiles.length ? await loadMold(moldFiles) : [];
+      let moldRows: MoldRow[] = [];
+      let moldWarning: string | null = null;
+      if (moldFiles.length) {
+        try {
+          const detail = await loadMoldDetailed(moldFiles);
+          moldRows = detail.rows;
+        } catch (moldErr) {
+          // MOLD 파싱 실패는 치명적이지 않다 — EMS 분석은 계속 진행하고
+          // 사용자에게 어떤 컬럼이 필요한지만 분명히 알린다.
+          moldWarning =
+            moldErr instanceof Error ? moldErr.message : String(moldErr);
+        }
+      }
       const thresholds = autoThresholds(emsRaw);
       const analyzed = analyze(emsRaw, moldRows, thresholds);
       set({
@@ -118,10 +130,17 @@ export const useFems = create<FemsState>((set, get) => ({
         filters: DEFAULT_FILTERS,
         savedAnalysisId: null,
       });
-      get().showToast(
-        `분석 완료 · 설비 ${analyzed.equipments.length}대 · ${moldRows.length}건 생산 데이터`,
-        "success",
-      );
+      if (moldWarning) {
+        get().showToast(
+          `분석 완료 · 설비 ${analyzed.equipments.length}대 (MOLD 파일 인식 실패: ${moldWarning})`,
+          "error",
+        );
+      } else {
+        get().showToast(
+          `분석 완료 · 설비 ${analyzed.equipments.length}대 · ${moldRows.length}건 생산 데이터`,
+          "success",
+        );
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       get().showToast("분석 실패: " + message, "error");
