@@ -9,8 +9,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- SheetJS (xlsx) -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<!-- 예빈봇 챗봇 위젯 (공식 스크립트) -->
-<script src="https://chatbot.aiconvergencelab.com/widget.js" data-slug="bot-d60ef01c" data-title="예빈봇" defer></script>
 
 <style>
   :root {
@@ -367,11 +365,69 @@
   }
   .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 
+  /* ========== Chatbot Widget ========== */
+  .chatbot-fab {
+    position: fixed; bottom: 24px; right: 24px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    border: none; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+    font-size: 24px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    z-index: 9999;
+  }
+  .chatbot-fab:hover { background: var(--primary-dark); transform: scale(1.05); }
+  .chatbot-fab:active { transform: scale(0.95); }
+
+  .chatbot-panel {
+    position: fixed; right: 24px; bottom: 96px;
+    width: 400px; max-width: calc(100vw - 32px);
+    height: 600px; max-height: calc(100vh - 112px);
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15,23,42,0.25);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
+    opacity: 0; transform: translateY(16px); pointer-events: none;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    z-index: 9998;
+  }
+  .chatbot-panel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .chatbot-header {
+    height: 48px; flex-shrink: 0;
+    background: linear-gradient(90deg, #4f46e5, #6366f1);
+    color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+  }
+  .chatbot-header .title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .chatbot-header .actions { display: flex; gap: 2px; }
+  .chatbot-header button {
+    width: 32px; height: 32px; border: none; background: transparent;
+    color: #fff; cursor: pointer; border-radius: 4px;
+    font-size: 18px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chatbot-header button:hover { background: rgba(255,255,255,0.15); }
+  .chatbot-body { position: relative; flex: 1; background: #f8fafc; }
+  .chatbot-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .chatbot-fallback {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(241,245,249,0.95); backdrop-filter: blur(4px);
+    border-top: 1px solid var(--border);
+    padding: 6px 12px; text-align: center;
+    font-size: 11px; color: var(--muted);
+  }
+  .chatbot-fallback a {
+    color: var(--primary); text-decoration: underline; cursor: pointer; font-weight: 500;
+  }
+
   /* ========== Print ========== */
   @media print {
     body { background: #fff; font-size: 11px; }
     header.app-header { background: #1e3a8a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .upload-view, .tabs, .actions-bar, .toolbar .btn, .status-bar { display: none !important; }
+    .upload-view, .tabs, .actions-bar, .toolbar .btn, .status-bar, .chatbot-fab, .chatbot-panel { display: none !important; }
     main { padding: 0; max-width: none; }
     .tab-content { display: block !important; page-break-after: always; }
     .tab-content:last-child { page-break-after: auto; }
@@ -633,6 +689,74 @@
     </div>
   </div>
 </div>
+
+<!-- ========== Chatbot Widget (예빈봇) ========== -->
+<div class="chatbot-panel" id="chatbot-panel" role="dialog" aria-label="예빈봇" aria-hidden="true">
+  <div class="chatbot-header">
+    <div class="title"><span>💬</span><span>예빈봇</span></div>
+    <div class="actions">
+      <button type="button" id="chatbot-newwin" title="새 창으로 열기" aria-label="새 창으로 열기">⤢</button>
+      <button type="button" id="chatbot-close" title="닫기" aria-label="닫기">×</button>
+    </div>
+  </div>
+  <div class="chatbot-body">
+    <iframe id="chatbot-frame" title="예빈봇" src="about:blank" allow="clipboard-write; microphone"></iframe>
+    <div class="chatbot-fallback">
+      챗봇이 보이지 않나요? <a id="chatbot-fallback-link">새 창으로 열기</a>
+    </div>
+  </div>
+</div>
+<button type="button" class="chatbot-fab" id="chatbot-fab" aria-label="예빈봇 열기" aria-expanded="false">💬</button>
+
+<script>
+'use strict';
+
+// ================================================================
+// 예빈봇 챗봇 토글 위젯
+// ================================================================
+(function () {
+  var CHATBOT_URL = 'https://chatbot.aiconvergencelab.com/bot-d60ef01c';
+  var fab = document.getElementById('chatbot-fab');
+  var panel = document.getElementById('chatbot-panel');
+  var frame = document.getElementById('chatbot-frame');
+  var closeBtn = document.getElementById('chatbot-close');
+  var newWinBtn = document.getElementById('chatbot-newwin');
+  var fallbackLink = document.getElementById('chatbot-fallback-link');
+  var loaded = false;
+
+  function openPanel() {
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+    fab.setAttribute('aria-expanded', 'true');
+    fab.textContent = '×';
+    if (!loaded) {
+      frame.src = CHATBOT_URL;
+      loaded = true;
+    }
+  }
+  function closePanel() {
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    fab.setAttribute('aria-expanded', 'false');
+    fab.textContent = '💬';
+  }
+  function togglePanel() {
+    if (panel.classList.contains('open')) closePanel();
+    else openPanel();
+  }
+  function openNewWindow() {
+    window.open(CHATBOT_URL, '_blank', 'width=450,height=680,resizable=yes,scrollbars=yes');
+  }
+
+  fab.addEventListener('click', togglePanel);
+  closeBtn.addEventListener('click', closePanel);
+  newWinBtn.addEventListener('click', openNewWindow);
+  fallbackLink.addEventListener('click', openNewWindow);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+  });
+})();
+</script>
 
 <script>
 'use strict';
