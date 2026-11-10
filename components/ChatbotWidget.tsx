@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const CHATBOT_URL = "https://chatbot.aiconvergencelab.com";
+const CHATBOT_URL = "https://chatbot.aiconvergencelab.com/bot-d60ef01c";
 const CHATBOT_TITLE = "예빈봇";
 
 export function ChatbotWidget() {
@@ -31,7 +31,7 @@ export function ChatbotWidget() {
     window.open(
       CHATBOT_URL,
       "_blank",
-      "width=450,height=650,resizable=yes,scrollbars=yes",
+      "width=450,height=680,resizable=yes,scrollbars=yes",
     );
     setOpen(false);
   };
