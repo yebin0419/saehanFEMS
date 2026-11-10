@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          src="https://chatbot.aiconvergencelab.com/widget.js"
+          data-slug="bot-d60ef01c"
+          data-title="예빈봇"
+          strategy="afterInteractive"
+        />
+      </body>
     </html>
   );
 }
