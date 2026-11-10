@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ChatbotWidget } from "@/components/ChatbotWidget";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +17,12 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         {children}
-        <ChatbotWidget />
+        <Script
+          src="https://chatbot.aiconvergencelab.com/widget.js"
+          data-slug="bot-d60ef01c"
+          data-title="예빈봇"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
